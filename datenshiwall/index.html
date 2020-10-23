@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>다텐시 배경화면</title>
+        <link rel="stylesheet" href="datenshiwall.css">
+    </head>
+    <body>
+        <canvas id="canvas" width="392" height="450" onclick="if (!editMode) fadeIn(settingsBg);"></canvas>
+        <div id="loading-background" class="WndBg" style="display: block;">
+            <div id="loading-window" class="Wnd" style="height: 40px; width: 180px; margin-top: -32px; margin-left: -102px;">
+                <p id="loading-text" class="Label CenterText">로딩 중...</p>
+                <progress id="loading-progressbar" style="height: 10px; width: 180px;" value="0" max="96"></progress>
+            </div>
+        </div>
+        <div id="settings-background" class="WndBg" style="display: none;" onclick="fadeOut(this)">
+            <div id="settings-window" class="Wnd" style="height: 204px; width: 300px; margin-top: -114px; margin-left: -162px;" onclick="event.stopPropagation();">
+                <p class="Label Button" style="float: right; width: auto; text-align: right; font-weight: bold;" title="닫기" onclick="fadeOut(settingsBg)">X</p>
+                <p class="Label MenuItem" style="font-size: 20px; font-weight: bold; width: 250px !important;">설정</p>
+                <div class="MenuItem">
+                    <label class="InlineBlock">
+                        <p class="Label InlineBlock">배경색: </p>
+                        <input id="colorPicker" type="color" class="InlineBlock" style="cursor: pointer;" onclick="alert('OK 버튼을 눌러 색상 선택창 표시\n(표시되지 않을 경우 색 버튼을 다시 누르세요.)\n키보드는 작동하지 않으니 키보드 입력 버튼을 사용하세요.')" value="#5df3e8" onchange="document.body.style.backgroundColor = this.value; localStorage.bgColor = this.value;">
+                    </label>
+                    <p class="Label Button InlineBlock" onclick="var str = prompt('색상 코드 입력 (형식: #RRGGBB)', colorPickerBtn.value); if (str === null) return; document.body.style.backgroundColor = str; colorPickerBtn.value = str; localStorage.bgColor = str;">키보드 입력</p>
+                    | <p class="Label Button InlineBlock" onclick="document.body.style.backgroundColor = '#5df3e8'; colorPickerBtn.value = '#5df3e8'; localStorage.removeItem('bgColor');">기본값 복원</p>
+                </div>
+                <div class="MenuItem">
+                    <p class="Label InlineBlock">배경 이미지: </p>
+                    <label class="Label Button InlineBlock">
+                        파일 선택
+                        <input id="imgInput" type="file" style="display: none;" accept="image/*" onchange="loadBgImg()">
+                    </label>
+                    | <p class="Label Button InlineBlock" onclick="document.body.style.backgroundImage = 'none'; localStorage.removeItem('bgImg');">제거</p>
+                    <form name="imgModeSelector" class="MenuItem">
+                        <p class="Label InlineBlock">배경 채우기: </p>
+                        <label><input type="radio" name="imgMode" value="center" checked>가운데</label>
+                        <label><input type="radio" name="imgMode" value="grid">바둑판식</label><br>
+                        <label><input type="radio" name="imgMode" value="horizfit">세로 맞춤</label>
+                        <label><input type="radio" name="imgMode" value="vertfit">가로 맞춤</label>
+                        <label><input type="radio" name="imgMode" value="scale">늘이기</label>
+                    </form>
+                </div>
+                <p class="Label Button MenuItem" onclick="updatePosBtns(); editModeWindow.style.boxShadow = '0 0 10px ' + colorPickerBtn.value; fadeOut(settingsBg); fadeIn(editModeWindow); editMode = true;">다텐시 이동 및 크기 조절</p>
+                <label class="Label MenuItem">
+                    로딩창 숨기기
+                    <input type="checkbox" id="HideLoadWndChkBox" onchange="localStorage.hideLoadWnd = this.checked;">
+                </label>
+                <p id="speed-button" class="Label Button MenuItem" onclick="var str = prompt('배속 입력 (0.5, 1, 1.5, 2 등)', speed); if (str === null) return; isNaN(str) ? alert('숫자만 입력하세요.') : speed = parseFloat(str); clearInterval(interval); startInterval(); this.textContent = '배속: ' + speed + 'x'; localStorage.speed = speed;">배속: 1x</p>
+                <p class="Label Button InlineBlock" onclick="if (!confirm('정말로 모든 설정값을 초기화하시겠습니까?')) return; localStorage.clear(); location.reload(true);">설정값 초기화</p> |
+                <p class="Label Button InlineBlock" onclick="location.reload(true);">새로고침</p>
+                <p class="Label" style="color: gray; font-size: 12px; position: absolute; left: 2px; bottom: 1px" onclick="debug();">RomanHue</p>
+                <p class="Label RightText" style="color: gray; font-size: 12px; position: absolute; right: 2px; bottom: 2px" onclick="if (confirm('다다다다천사 - 나나오아카리\nOK 버튼을 눌러 링크 복사')) yannaiJannaiDekinainda();">이미지 출처</p>
+            </div>
+        </div>
+        <div id="editMode-window" class="Wnd" style="display: none; height: 150px; width: 300px; margin-top: -87px; margin-left: -162px;">
+            <p class="Label MenuItem" style="font-size: 20px; font-weight: bold; width: 250px !important;">다텐시 이동 및 크기 조절</p>
+            <div class="MenuItem">
+                <p class="Label InlineBlock">너비: </p>
+                <button id="width-button" class="InlineBlock" onclick="var width = prompt('너비 입력 (단위: px)', canvas.width); if (width !== null) isNaN(width) ? alert('숫자만 입력하세요.') : canvas.width = width; this.textContent = canvas.width + 'px';">392px</button>
+                <p class="Label Button InlineBlock" onclick="canvas.width = 392; widthBtn.textContent = '392px';">기본값 복원</p>
+            </div>
+            <div class="MenuItem">
+                <p class="Label InlineBlock">높이: </p>
+                <button id="height-button" class="InlineBlock" onclick="var height = prompt('높이 입력 (단위: px)', canvas.height); if (height !== null) isNaN(height) ? alert('숫자만 입력하세요.') : canvas.height = height; this.textContent = canvas.height + 'px';">450px</button>
+                <p class="Label Button InlineBlock" onclick="canvas.height = 450; heightBtn.textContent = '450px';">기본값 복원</p>
+            </div>
+            <form name="positionSelector" class="MenuItem">
+                <p class="Label InlineBlock">위치: </p>
+                <label><input type="radio" name="position" value="left">좌측</label>
+                <label><input type="radio" name="position" value="center">중앙</label>
+                <label><input type="radio" name="position" value="right" checked>우측 (기본)</label><br>
+                <label><input type="radio" name="position" value="custom" id="position-center-radbtn">사용자 지정</label>
+                (<button type="button" id="xposition-button" class="InlineBlock" onclick="var xPos = prompt('X 좌표 입력 (기본 단위: px)', this.textContent); if (xPos !== null) isNaN(xPos) ? canvas.style.left = xPos : canvas.style.left = xPos + 'px'; this.textContent = canvas.style.left;" disabled>px</button>, 
+                <button type="button" id="yposition-button" class="InlineBlock" onclick="var yPos = prompt('Y 좌표 입력 (기본 단위: px)', this.textContent); if (yPos !== null) isNaN(yPos) ? canvas.style.top = yPos : canvas.style.top = yPos + 'px'; this.textContent = canvas.style.top;" disabled>px</button>)
+            </form>
+            <div class="MenuItem BottomButtons">
+                <p class="Label Button MenuItem CenterText" onclick="localStorage.dtsWidth = canvas.width; localStorage.dtsHeight = canvas.height; localStorage.dtsPosMode = document.positionSelector.position.value; localStorage.dtsXPos = canvas.style.left; localStorage.dtsYPos = canvas.style.top; fadeOut(editModeWindow); fadeIn(settingsBg); editMode = false;">저장</p>
+                <p class="Label Button MenuItem CenterText" onclick="revertSizeAndPos(); fadeOut(editModeWindow); fadeIn(settingsBg); editMode = false;">취소</p>
+            </div>
+        </div>
+        <script src="datenshiwall.js"></script>
+    </body>
+</html>
